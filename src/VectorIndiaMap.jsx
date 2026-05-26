@@ -8,6 +8,35 @@ function normalizeName(name = '') {
   return String(name).trim().toLowerCase().replace(/&/g, 'and').replace(/[^a-z]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+const aliases = {
+  'nct of delhi': 'delhi',
+  'delhi nct': 'delhi',
+  'orissa': 'odisha',
+  'uttaranchal': 'uttarakhand',
+  'pondicherry': 'puducherry',
+  'daman and diu': 'dadra and nagar haveli and daman and diu',
+  'dadra and nagar haveli': 'dadra and nagar haveli and daman and diu',
+  'jammu kashmir': 'jammu and kashmir',
+  'andaman nicobar': 'andaman and nicobar islands',
+  'andaman and nicobar': 'andaman and nicobar islands'
+};
+
+function displayLabel(name) {
+  const short = {
+    'Andaman and Nicobar Islands': 'A&N',
+    'Dadra and Nagar Haveli and Daman and Diu': 'DNH/DD',
+    'Jammu and Kashmir': 'J&K',
+    'Madhya Pradesh': 'MP',
+    'Uttar Pradesh': 'UP',
+    'Andhra Pradesh': 'AP',
+    'Himachal Pradesh': 'HP',
+    'Arunachal Pradesh': 'Arunachal',
+    'West Bengal': 'Bengal',
+    'Tamil Nadu': 'Tamil Nadu'
+  };
+  return short[name] || name;
+}
+
 function eachPoint(geometry, visit) {
   if (!geometry) return;
   const walk = (value) => {
@@ -39,6 +68,18 @@ function boundsFor(features) {
   }
   if (![minLng, maxLng, minLat, maxLat].every(Number.isFinite)) return null;
   return { minLng, maxLng, minLat, maxLat };
+}
+
+function featureBounds(feature, project) {
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity, count = 0;
+  eachPoint(feature.geometry, (point) => {
+    const [x, y] = project(point);
+    minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+    minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+    count += 1;
+  });
+  if (!count) return null;
+  return { minX, maxX, minY, maxY, width: maxX - minX, height: maxY - minY };
 }
 
 function makeProjector(bounds, width = 900, height = 980, pad = 28) {
@@ -74,6 +115,16 @@ function centroid(feature, project) {
   return project([sumLng / count, sumLat / count]);
 }
 
+function labelStyle(feature, state, project, zoom) {
+  const box = featureBounds(feature, project);
+  if (!box) return { fontSize: 12, hide: false };
+  const smallest = Math.max(1, Math.min(box.width, box.height));
+  const longestWord = Math.max(...displayLabel(state.name).split(/\s|\//).map((w) => w.length));
+  const size = Math.max(7, Math.min(16, smallest / Math.max(2.8, longestWord * 0.42))) / Math.sqrt(zoom);
+  const hide = zoom < 1.35 && (box.width < 24 || box.height < 16);
+  return { fontSize: Number(size.toFixed(1)), hide };
+}
+
 export default function VectorIndiaMap({ states, selected, visited, onPick }) {
   const [geoJson, setGeoJson] = useState(null);
   const [error, setError] = useState('');
@@ -90,7 +141,13 @@ export default function VectorIndiaMap({ states, selected, visited, onPick }) {
       .catch((err) => setError(err.message));
   }, []);
 
-  const stateByName = useMemo(() => Object.fromEntries(states.map((state) => [normalizeName(state.name), state])), [states]);
+  const stateByName = useMemo(() => {
+    const entries = states.flatMap((state) => {
+      const base = normalizeName(state.name);
+      return [[base, state]];
+    });
+    return Object.fromEntries(entries);
+  }, [states]);
   const features = useMemo(() => Array.isArray(geoJson?.features) ? geoJson.features : [], [geoJson]);
   const mapData = useMemo(() => {
     if (!features.length) return null;
@@ -126,12 +183,15 @@ export default function VectorIndiaMap({ states, selected, visited, onPick }) {
         <g transform={`translate(${pan.x} ${pan.y}) scale(${zoom})`}>
           {features.map((feature, index) => {
             const rawName = getStateName(feature.properties);
-            const state = stateByName[normalizeName(rawName)];
+            const normalized = normalizeName(rawName);
+            const state = stateByName[aliases[normalized] || normalized];
             const path = geometryToPath(feature.geometry, mapData.project);
             if (!path) return null;
             const active = state && selected.name === state.name;
             const visitedState = state && visited.has(state.name);
             const [labelX, labelY] = centroid(feature, mapData.project);
+            const label = state ? displayLabel(state.name) : rawName;
+            const dynamic = state ? labelStyle(feature, state, mapData.project, zoom) : { fontSize: 9, hide: true };
             return (
               <g key={`${rawName || 'state'}-${index}`}>
                 <path
@@ -144,13 +204,13 @@ export default function VectorIndiaMap({ states, selected, visited, onPick }) {
                 >
                   <title>{state ? `${state.name}: ${state.capital}` : rawName}</title>
                 </path>
-                {state && <text x={labelX} y={labelY} className="state-map-label" onClick={() => onPick(state)}>{state.name.split(' ')[0]}</text>}
+                {state && !dynamic.hide && <text x={labelX} y={labelY} fontSize={dynamic.fontSize} className="state-map-label" onClick={() => onPick(state)}>{label}</text>}
               </g>
             );
           })}
         </g>
       </svg>
-      <p className="map-caption">Use + / − to zoom. Tap a state boundary to learn its capital and language.</p>
+      <p className="map-caption">Use + / − to zoom. Labels resize automatically so small states are easier to read.</p>
     </div>
   );
 }
