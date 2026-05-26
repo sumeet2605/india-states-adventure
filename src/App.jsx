@@ -31,7 +31,15 @@ const states = [
   { name: 'Tripura', capital: 'Agartala', language: 'Bengali', zone: 'North East', emoji: '🏰', fact: 'Known for palaces and bamboo crafts.', x: 81, y: 46 },
   { name: 'Uttar Pradesh', capital: 'Lucknow', language: 'Hindi', zone: 'North', emoji: '🕌', fact: 'India’s most populous state.', x: 44, y: 34 },
   { name: 'Uttarakhand', capital: 'Dehradun', language: 'Hindi', zone: 'North', emoji: '⛰️', fact: 'Known for the Himalayas and holy rivers.', x: 41, y: 25 },
-  { name: 'West Bengal', capital: 'Kolkata', language: 'Bengali', zone: 'East', emoji: '📖', fact: 'Famous for literature, sweets, and Durga Puja.', x: 64, y: 45 }
+  { name: 'West Bengal', capital: 'Kolkata', language: 'Bengali', zone: 'East', emoji: '📖', fact: 'Famous for literature, sweets, and Durga Puja.', x: 64, y: 45 },
+  { name: 'Andaman and Nicobar Islands', capital: 'Port Blair', language: 'Hindi, English, Bengali, Tamil, Telugu', zone: 'Union Territory', emoji: '🏝️', fact: 'A group of islands in the Bay of Bengal.', x: 91, y: 82 },
+  { name: 'Chandigarh', capital: 'Chandigarh', language: 'Hindi, Punjabi, English', zone: 'Union Territory', emoji: '🏙️', fact: 'A planned city and capital shared by Punjab and Haryana.', x: 31, y: 24 },
+  { name: 'Dadra and Nagar Haveli and Daman and Diu', capital: 'Daman', language: 'Gujarati, Hindi, Marathi', zone: 'Union Territory', emoji: '🌊', fact: 'A coastal union territory with small enclaves in western India.', x: 20, y: 48 },
+  { name: 'Delhi', capital: 'New Delhi', language: 'Hindi, English, Punjabi, Urdu', zone: 'Union Territory', emoji: '🏛️', fact: 'India’s national capital territory.', x: 36, y: 29 },
+  { name: 'Jammu and Kashmir', capital: 'Srinagar / Jammu', language: 'Kashmiri, Dogri, Hindi, Urdu, English', zone: 'Union Territory', emoji: '🏔️', fact: 'Has summer and winter capitals.', x: 30, y: 16 },
+  { name: 'Ladakh', capital: 'Leh', language: 'Ladakhi, Hindi, English', zone: 'Union Territory', emoji: '❄️', fact: 'Known for high mountains, monasteries, and cold desert landscapes.', x: 39, y: 12 },
+  { name: 'Lakshadweep', capital: 'Kavaratti', language: 'Malayalam, English', zone: 'Union Territory', emoji: '🐠', fact: 'India’s smallest union territory, made of coral islands.', x: 24, y: 78 },
+  { name: 'Puducherry', capital: 'Puducherry', language: 'Tamil, English, Telugu, Malayalam', zone: 'Union Territory', emoji: '🌅', fact: 'A coastal union territory with French heritage.', x: 38, y: 72 }
 ];
 
 function makeQuestion(index) {
@@ -49,7 +57,7 @@ export default function App() {
   const [quizIndex, setQuizIndex] = useState(0);
   const [huntIndex, setHuntIndex] = useState(5);
   const [score, setScore] = useState(0);
-  const [message, setMessage] = useState('Tap a colored state shape to begin!');
+  const [message, setMessage] = useState('Tap a colored state or union territory shape to begin!');
 
   const filteredStates = useMemo(() => states.filter((s) =>
     [s.name, s.capital, s.language, s.zone].join(' ').toLowerCase().includes(query.toLowerCase())
@@ -67,7 +75,7 @@ export default function App() {
         setMessage(`Treasure found! ${state.name} has capital ${state.capital}. +15 stars! 🪙`);
         setHuntIndex((i) => i + 7);
       } else {
-        setMessage(`Almost! Look for the state with capital ${treasure.capital}.`);
+        setMessage(`Almost! Look for the state or UT with capital ${treasure.capital}.`);
       }
     } else {
       setMessage(`Great! ${state.name}'s capital is ${state.capital}.`);
@@ -99,7 +107,7 @@ export default function App() {
         <div>
           <p className="eyebrow">For curious explorers age 7+</p>
           <h1>🇮🇳 India States Adventure</h1>
-          <p className="subtitle">Tap real clickable state shapes, learn capitals and languages, then win quiz stars.</p>
+          <p className="subtitle">Tap real clickable states and union territories, learn capitals and languages, then win quiz stars.</p>
         </div>
         <div className="mascot" aria-hidden="true">🐘</div>
         <div className="score-card"><Trophy /> <strong>{score}</strong><span>quiz stars</span></div>
@@ -115,15 +123,15 @@ export default function App() {
       {mode === 'hunt' && (
         <section className="hunt-card">
           <h2>🪙 Treasure Hunt</h2>
-          <p>Find the state whose capital is <strong>{treasure.capital}</strong> and language is <strong>{treasure.language}</strong>.</p>
+          <p>Find the state or UT whose capital is <strong>{treasure.capital}</strong> and language is <strong>{treasure.language}</strong>.</p>
         </section>
       )}
 
       <div className="layout wide-map-layout">
         <section className="map-card">
-          <div className="map-title"><MapPin /> Clickable India Vector Map</div>
+          <div className="map-title"><MapPin /> Clickable India Map</div>
           <VectorIndiaMap states={states} selected={selected} visited={visited} onPick={chooseState} />
-          <input className="search" placeholder="Search state, capital, language..." value={query} onChange={(e) => setQuery(e.target.value)} />
+          <input className="search" placeholder="Search state, UT, capital, language..." value={query} onChange={(e) => setQuery(e.target.value)} />
           <div className="state-grid compact">
             {filteredStates.map((state) => (
               <button key={state.name} className={`state-tile ${selected.name === state.name ? 'selected' : ''}`} onClick={() => chooseState(state)}>
@@ -144,7 +152,7 @@ export default function App() {
           <p className="fun"><Sparkles size={18}/> {selected.fact}</p>
           <button className="speak" onClick={() => speak(selected)}><Volume2 size={18}/> Read aloud</button>
           <p className="message">{message}</p>
-          <div className="progress">Visited {visited.size} / {states.length} states</div>
+          <div className="progress">Visited {visited.size} / {states.length} places</div>
         </aside>
       </div>
 
