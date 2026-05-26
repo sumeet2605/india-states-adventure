@@ -8,23 +8,37 @@ function normalizeName(name = '') {
   return String(name).trim().toLowerCase().replace(/&/g, 'and').replace(/[^a-z]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-function collectCoordinates(geometry) {
+function eachPoint(geometry, visit) {
+  if (!geometry) return;
+  const walk = (value) => {
+    if (!Array.isArray(value)) return;
+    if (typeof value[0] === 'number' && typeof value[1] === 'number') {
+      visit(value);
+      return;
+    }
+    for (const child of value) walk(child);
+  };
+  walk(geometry.coordinates);
+}
+
+function ringsForGeometry(geometry) {
   if (!geometry) return [];
-  if (geometry.type === 'Polygon') return geometry.coordinates.flat(1);
-  if (geometry.type === 'MultiPolygon') return geometry.coordinates.flat(2);
+  if (geometry.type === 'Polygon') return geometry.coordinates || [];
+  if (geometry.type === 'MultiPolygon') return (geometry.coordinates || []).flatMap((polygon) => polygon || []);
   return [];
 }
 
 function boundsFor(features) {
-  const points = features.flatMap((feature) => collectCoordinates(feature.geometry));
-  const lngs = points.map((p) => p[0]).filter(Number.isFinite);
-  const lats = points.map((p) => p[1]).filter(Number.isFinite);
-  return {
-    minLng: Math.min(...lngs),
-    maxLng: Math.max(...lngs),
-    minLat: Math.min(...lats),
-    maxLat: Math.max(...lats)
-  };
+  let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
+  for (const feature of features) {
+    eachPoint(feature.geometry, ([lng, lat]) => {
+      if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
+      minLng = Math.min(minLng, lng); maxLng = Math.max(maxLng, lng);
+      minLat = Math.min(minLat, lat); maxLat = Math.max(maxLat, lat);
+    });
+  }
+  if (![minLng, maxLng, minLat, maxLat].every(Number.isFinite)) return null;
+  return { minLng, maxLng, minLat, maxLat };
 }
 
 function makeProjector(bounds, width = 900, height = 980, pad = 28) {
@@ -39,6 +53,7 @@ function makeProjector(bounds, width = 900, height = 980, pad = 28) {
 }
 
 function ringToPath(ring, project) {
+  if (!Array.isArray(ring) || ring.length < 3) return '';
   return ring.map((point, index) => {
     const [x, y] = project(point);
     return `${index === 0 ? 'M' : 'L'}${x.toFixed(2)} ${y.toFixed(2)}`;
@@ -46,18 +61,17 @@ function ringToPath(ring, project) {
 }
 
 function geometryToPath(geometry, project) {
-  if (!geometry) return '';
-  if (geometry.type === 'Polygon') return geometry.coordinates.map((ring) => ringToPath(ring, project)).join(' ');
-  if (geometry.type === 'MultiPolygon') return geometry.coordinates.flatMap((polygon) => polygon.map((ring) => ringToPath(ring, project))).join(' ');
-  return '';
+  return ringsForGeometry(geometry).map((ring) => ringToPath(ring, project)).filter(Boolean).join(' ');
 }
 
 function centroid(feature, project) {
-  const points = collectCoordinates(feature.geometry);
-  if (!points.length) return [0, 0];
-  const avgLng = points.reduce((sum, p) => sum + p[0], 0) / points.length;
-  const avgLat = points.reduce((sum, p) => sum + p[1], 0) / points.length;
-  return project([avgLng, avgLat]);
+  let count = 0, sumLng = 0, sumLat = 0;
+  eachPoint(feature.geometry, ([lng, lat]) => {
+    if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
+    sumLng += lng; sumLat += lat; count += 1;
+  });
+  if (!count) return [0, 0];
+  return project([sumLng / count, sumLat / count]);
 }
 
 export default function VectorIndiaMap({ states, selected, visited, onPick }) {
@@ -74,21 +88,18 @@ export default function VectorIndiaMap({ states, selected, visited, onPick }) {
       .catch((err) => setError(err.message));
   }, []);
 
-  const stateByName = useMemo(() => {
-    const entries = states.map((state) => [normalizeName(state.name), state]);
-    return Object.fromEntries(entries);
-  }, [states]);
-
-  const features = geoJson?.features || [];
+  const stateByName = useMemo(() => Object.fromEntries(states.map((state) => [normalizeName(state.name), state])), [states]);
+  const features = useMemo(() => Array.isArray(geoJson?.features) ? geoJson.features : [], [geoJson]);
   const mapData = useMemo(() => {
     if (!features.length) return null;
     const bounds = boundsFor(features);
-    const project = makeProjector(bounds);
-    return { bounds, project };
+    if (!bounds) return null;
+    return { project: makeProjector(bounds) };
   }, [features]);
 
   if (error) return <div className="vector-map-wrap"><p className="message">Map error: {error}</p></div>;
-  if (!mapData) return <div className="vector-map-wrap loading-map">Loading India map…</div>;
+  if (!geoJson) return <div className="vector-map-wrap loading-map">Loading India map…</div>;
+  if (!mapData) return <div className="vector-map-wrap"><p className="message">GeoJSON loaded, but no drawable state coordinates were found.</p></div>;
 
   return (
     <div className="vector-map-wrap">
@@ -97,11 +108,12 @@ export default function VectorIndiaMap({ states, selected, visited, onPick }) {
           const rawName = getStateName(feature.properties);
           const state = stateByName[normalizeName(rawName)];
           const path = geometryToPath(feature.geometry, mapData.project);
+          if (!path) return null;
           const active = state && selected.name === state.name;
           const visitedState = state && visited.has(state.name);
           const [labelX, labelY] = centroid(feature, mapData.project);
           return (
-            <g key={`${rawName}-${index}`}>
+            <g key={`${rawName || 'state'}-${index}`}>
               <path
                 d={path}
                 className={`state-shape color-${index % 7} ${active ? 'active' : ''} ${visitedState ? 'visited' : ''} ${state ? '' : 'disabled'}`}
@@ -112,11 +124,7 @@ export default function VectorIndiaMap({ states, selected, visited, onPick }) {
               >
                 <title>{state ? `${state.name}: ${state.capital}` : rawName}</title>
               </path>
-              {state && (
-                <text x={labelX} y={labelY} className="state-map-label" onClick={() => onPick(state)}>
-                  {state.name.split(' ')[0]}
-                </text>
-              )}
+              {state && <text x={labelX} y={labelY} className="state-map-label" onClick={() => onPick(state)}>{state.name.split(' ')[0]}</text>}
             </g>
           );
         })}
