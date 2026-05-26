@@ -15,3 +15,26 @@ export const oceans = [
   { name: 'Southern Ocean', emoji: '🧊', size: 'Ocean around Antarctica', touches: 'Antarctica', animals: 'Penguins, seals, krill', fact: 'The Southern Ocean circles Antarctica.' },
   { name: 'Arctic Ocean', emoji: '❄️', size: 'Smallest ocean', touches: 'North America, Europe, Asia', animals: 'Polar bears, seals, walruses', fact: 'The Arctic Ocean is around the North Pole.' }
 ];
+
+export const countries = [
+  { name: 'India', emoji: '🇮🇳', capital: 'New Delhi', currency: 'Indian Rupee', language: 'Hindi and English', landmark: 'Taj Mahal', fact: 'India has many languages, festivals, and the Himalayas.' },
+  { name: 'United States', emoji: '🇺🇸', capital: 'Washington, D.C.', currency: 'US Dollar', language: 'English', landmark: 'Statue of Liberty', fact: 'The United States has 50 states.' },
+  { name: 'Canada', emoji: '🇨🇦', capital: 'Ottawa', currency: 'Canadian Dollar', language: 'English and French', landmark: 'Niagara Falls', fact: 'Canada is famous for maple leaves and huge forests.' },
+  { name: 'Brazil', emoji: '🇧🇷', capital: 'Brasília', currency: 'Brazilian Real', language: 'Portuguese', landmark: 'Christ the Redeemer', fact: 'Brazil has much of the Amazon Rainforest.' },
+  { name: 'United Kingdom', emoji: '🇬🇧', capital: 'London', currency: 'Pound Sterling', language: 'English', landmark: 'Big Ben', fact: 'The UK includes England, Scotland, Wales, and Northern Ireland.' },
+  { name: 'France', emoji: '🇫🇷', capital: 'Paris', currency: 'Euro', language: 'French', landmark: 'Eiffel Tower', fact: 'France is known for art, fashion, and delicious bread.' },
+  { name: 'Germany', emoji: '🇩🇪', capital: 'Berlin', currency: 'Euro', language: 'German', landmark: 'Brandenburg Gate', fact: 'Germany is famous for cars, castles, and forests.' },
+  { name: 'Italy', emoji: '🇮🇹', capital: 'Rome', currency: 'Euro', language: 'Italian', landmark: 'Colosseum', fact: 'Italy is shaped like a boot.' },
+  { name: 'Japan', emoji: '🇯🇵', capital: 'Tokyo', currency: 'Japanese Yen', language: 'Japanese', landmark: 'Mount Fuji', fact: 'Japan is an island country with bullet trains and cherry blossoms.' },
+  { name: 'China', emoji: '🇨🇳', capital: 'Beijing', currency: 'Renminbi / Yuan', language: 'Mandarin Chinese', landmark: 'Great Wall of China', fact: 'China has the world’s largest population after India.' },
+  { name: 'Australia', emoji: '🇦🇺', capital: 'Canberra', currency: 'Australian Dollar', language: 'English', landmark: 'Sydney Opera House', fact: 'Australia is home to kangaroos and koalas.' },
+  { name: 'South Africa', emoji: '🇿🇦', capital: 'Pretoria, Cape Town, Bloemfontein', currency: 'South African Rand', language: '11 official languages', landmark: 'Table Mountain', fact: 'South Africa has three capital cities.' },
+  { name: 'Egypt', emoji: '🇪🇬', capital: 'Cairo', currency: 'Egyptian Pound', language: 'Arabic', landmark: 'Pyramids of Giza', fact: 'Ancient Egypt built pyramids near the Nile River.' },
+  { name: 'Russia', emoji: '🇷🇺', capital: 'Moscow', currency: 'Russian Ruble', language: 'Russian', landmark: 'Saint Basil’s Cathedral', fact: 'Russia is the largest country by area.' },
+  { name: 'Mexico', emoji: '🇲🇽', capital: 'Mexico City', currency: 'Mexican Peso', language: 'Spanish', landmark: 'Chichen Itza', fact: 'Mexico is known for ancient pyramids and colorful festivals.' },
+  { name: 'United Arab Emirates', emoji: '🇦🇪', capital: 'Abu Dhabi', currency: 'UAE Dirham', language: 'Arabic', landmark: 'Burj Khalifa', fact: 'The UAE has one of the world’s tallest buildings.' },
+  { name: 'Singapore', emoji: '🇸🇬', capital: 'Singapore', currency: 'Singapore Dollar', language: 'English, Malay, Mandarin, Tamil', landmark: 'Merlion', fact: 'Singapore is a city, country, and island.' },
+  { name: 'Nepal', emoji: '🇳🇵', capital: 'Kathmandu', currency: 'Nepalese Rupee', language: 'Nepali', landmark: 'Mount Everest', fact: 'Nepal is home to the world’s tallest mountain.' },
+  { name: 'Sri Lanka', emoji: '🇱🇰', capital: 'Sri Jayawardenepura Kotte', currency: 'Sri Lankan Rupee', language: 'Sinhala and Tamil', landmark: 'Sigiriya', fact: 'Sri Lanka is an island near southern India.' },
+  { name: 'New Zealand', emoji: '🇳🇿', capital: 'Wellington', currency: 'New Zealand Dollar', language: 'English and Māori', landmark: 'Milford Sound', fact: 'New Zealand is known for mountains, sheep, and kiwis.' }
+];
