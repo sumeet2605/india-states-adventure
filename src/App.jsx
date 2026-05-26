@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { MapPin, Star, Trophy, Volume2, Sparkles, RotateCcw } from 'lucide-react';
+import { MapPin, Star, Trophy, Volume2, Sparkles, RotateCcw, Compass } from 'lucide-react';
 import './style.css';
 
 const states = [
@@ -46,6 +46,7 @@ export default function App() {
   const [mode, setMode] = useState('explore');
   const [query, setQuery] = useState('');
   const [quizIndex, setQuizIndex] = useState(0);
+  const [huntIndex, setHuntIndex] = useState(5);
   const [score, setScore] = useState(0);
   const [message, setMessage] = useState('Tap a state to begin your adventure!');
 
@@ -54,11 +55,22 @@ export default function App() {
   ), [query]);
 
   const question = useMemo(() => makeQuestion(quizIndex), [quizIndex]);
+  const treasure = states[huntIndex % states.length];
 
   function chooseState(state) {
     setSelected(state);
     setVisited((old) => new Set([...old, state.name]));
-    setMessage(`Great! ${state.name}'s capital is ${state.capital}.`);
+    if (mode === 'hunt') {
+      if (state.name === treasure.name) {
+        setScore((s) => s + 15);
+        setMessage(`Treasure found! ${state.name} has capital ${state.capital}. +15 stars! 🪙`);
+        setHuntIndex((i) => i + 7);
+      } else {
+        setMessage(`Almost! Look for the state with capital ${treasure.capital}.`);
+      }
+    } else {
+      setMessage(`Great! ${state.name}'s capital is ${state.capital}.`);
+    }
   }
 
   function speak(state) {
@@ -88,14 +100,23 @@ export default function App() {
           <h1>🇮🇳 India States Adventure</h1>
           <p className="subtitle">Tap states, learn capitals and languages, then win quiz stars.</p>
         </div>
+        <div className="mascot" aria-hidden="true">🐘</div>
         <div className="score-card"><Trophy /> <strong>{score}</strong><span>quiz stars</span></div>
       </section>
 
       <nav className="tabs">
         <button className={mode === 'explore' ? 'active' : ''} onClick={() => setMode('explore')}>🗺️ Explore</button>
         <button className={mode === 'quiz' ? 'active' : ''} onClick={() => setMode('quiz')}>⭐ Quiz</button>
+        <button className={mode === 'hunt' ? 'active' : ''} onClick={() => setMode('hunt')}><Compass size={18}/> Treasure Hunt</button>
         <button onClick={() => { setScore(0); setQuizIndex(0); setVisited(new Set()); setMessage('Adventure reset!'); }}><RotateCcw size={18}/> Reset</button>
       </nav>
+
+      {mode === 'hunt' && (
+        <section className="hunt-card">
+          <h2>🪙 Treasure Hunt</h2>
+          <p>Find the state whose capital is <strong>{treasure.capital}</strong> and language is <strong>{treasure.language}</strong>.</p>
+        </section>
+      )}
 
       <div className="layout">
         <section className="map-card">
