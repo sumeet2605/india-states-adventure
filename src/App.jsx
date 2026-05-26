@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { MapPin, Star, Trophy, Volume2, Sparkles, RotateCcw, Compass } from 'lucide-react';
 import VectorIndiaMap from './VectorIndiaMap';
+import { continents, oceans } from './data';
 import './style.css';
 
 const states = [
@@ -42,15 +43,56 @@ const states = [
   { name: 'Puducherry', capital: 'Puducherry', language: 'Tamil, English, Telugu, Malayalam', zone: 'Union Territory', emoji: '🌅', fact: 'A coastal union territory with French heritage.', x: 38, y: 72 }
 ];
 
-function makeQuestion(index) {
-  const answer = states[index % states.length];
-  const pool = states.filter((s) => s.name !== answer.name).sort(() => Math.random() - 0.5).slice(0, 3);
-  const options = [...pool.map((s) => s.capital), answer.capital].sort(() => Math.random() - 0.5);
+function LearningCards({ title, subtitle, items, selected, onPick, type }) {
+  return (
+    <section className="map-card">
+      <div className="map-title">{type === 'ocean' ? '🌊' : '🌍'} {title}</div>
+      <p className="subtitle mini-subtitle">{subtitle}</p>
+      <div className="world-grid">
+        {items.map((item) => (
+          <button key={item.name} className={`world-card ${selected.name === item.name ? 'selected' : ''}`} onClick={() => onPick(item)}>
+            <span className="world-emoji">{item.emoji}</span>
+            <strong>{item.name}</strong>
+            <small>{item.size}</small>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function WorldInfo({ item, type, speak }) {
+  return (
+    <aside className="info-card">
+      <div className="big-emoji">{item.emoji}</div>
+      <h2>{item.name}</h2>
+      <div className="fact-row"><strong>📏 Size</strong><span>{item.size}</span></div>
+      {type === 'continent' ? <>
+        <div className="fact-row"><strong>🌐 Countries</strong><span>{item.countries}</span></div>
+        <div className="fact-row"><strong>🦁 Animals</strong><span>{item.animals}</span></div>
+        <div className="fact-row"><strong>📍 Landmark</strong><span>{item.landmark}</span></div>
+      </> : <>
+        <div className="fact-row"><strong>🗺 Touches</strong><span>{item.touches}</span></div>
+        <div className="fact-row"><strong>🐬 Animals</strong><span>{item.animals}</span></div>
+      </>}
+      <p className="fun"><Sparkles size={18}/> {item.fact}</p>
+      <button className="speak" onClick={() => speak(item)}><Volume2 size={18}/> Read aloud</button>
+    </aside>
+  );
+}
+
+function makeQuestion(index, list) {
+  const answer = list[index % list.length];
+  const pool = list.filter((s) => s.name !== answer.name).sort(() => Math.random() - 0.5).slice(0, 3);
+  const options = [...pool.map((s) => s.capital || s.landmark || s.size), answer.capital || answer.landmark || answer.size].sort(() => Math.random() - 0.5);
   return { answer, options };
 }
 
 export default function App() {
+  const [section, setSection] = useState('india');
   const [selected, setSelected] = useState(states[13]);
+  const [selectedContinent, setSelectedContinent] = useState(continents[0]);
+  const [selectedOcean, setSelectedOcean] = useState(oceans[0]);
   const [visited, setVisited] = useState(new Set(['Maharashtra']));
   const [mode, setMode] = useState('explore');
   const [query, setQuery] = useState('');
@@ -63,7 +105,7 @@ export default function App() {
     [s.name, s.capital, s.language, s.zone].join(' ').toLowerCase().includes(query.toLowerCase())
   ), [query]);
 
-  const question = useMemo(() => makeQuestion(quizIndex), [quizIndex]);
+  const question = useMemo(() => makeQuestion(quizIndex, states), [quizIndex]);
   const treasure = states[huntIndex % states.length];
 
   function chooseState(state) {
@@ -82,9 +124,9 @@ export default function App() {
     }
   }
 
-  function speak(state) {
+  function speak(item) {
     if (!window.speechSynthesis) return;
-    const text = `${state.name}. Capital ${state.capital}. Main language ${state.language}.`;
+    const text = item.capital ? `${item.name}. Capital ${item.capital}. Main language ${item.language}.` : `${item.name}. ${item.size}. ${item.fact}`;
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
   }
@@ -106,65 +148,83 @@ export default function App() {
       <section className="hero">
         <div>
           <p className="eyebrow">For curious explorers age 7+</p>
-          <h1>🇮🇳 India States Adventure</h1>
-          <p className="subtitle">Tap real clickable states and union territories, learn capitals and languages, then win quiz stars.</p>
+          <h1>🌎 Geography Adventure</h1>
+          <p className="subtitle">Explore India, continents, and oceans with games, stars, and read-aloud learning.</p>
         </div>
         <div className="mascot" aria-hidden="true">🐘</div>
-        <div className="score-card"><Trophy /> <strong>{score}</strong><span>quiz stars</span></div>
+        <div className="score-card"><Trophy /> <strong>{score}</strong><span>stars</span></div>
       </section>
 
       <nav className="tabs">
-        <button className={mode === 'explore' ? 'active' : ''} onClick={() => setMode('explore')}>🗺️ Explore</button>
-        <button className={mode === 'quiz' ? 'active' : ''} onClick={() => setMode('quiz')}>⭐ Quiz</button>
-        <button className={mode === 'hunt' ? 'active' : ''} onClick={() => setMode('hunt')}><Compass size={18}/> Treasure Hunt</button>
-        <button onClick={() => { setScore(0); setQuizIndex(0); setVisited(new Set()); setMessage('Adventure reset!'); }}><RotateCcw size={18}/> Reset</button>
+        <button className={section === 'india' ? 'active' : ''} onClick={() => setSection('india')}>🇮🇳 India</button>
+        <button className={section === 'continents' ? 'active' : ''} onClick={() => setSection('continents')}>🌍 Continents</button>
+        <button className={section === 'oceans' ? 'active' : ''} onClick={() => setSection('oceans')}>🌊 Oceans</button>
       </nav>
 
-      {mode === 'hunt' && (
-        <section className="hunt-card">
-          <h2>🪙 Treasure Hunt</h2>
-          <p>Find the state or UT whose capital is <strong>{treasure.capital}</strong> and language is <strong>{treasure.language}</strong>.</p>
-        </section>
-      )}
+      {section === 'india' && <>
+        <nav className="tabs">
+          <button className={mode === 'explore' ? 'active' : ''} onClick={() => setMode('explore')}>🗺️ Explore</button>
+          <button className={mode === 'quiz' ? 'active' : ''} onClick={() => setMode('quiz')}>⭐ Quiz</button>
+          <button className={mode === 'hunt' ? 'active' : ''} onClick={() => setMode('hunt')}><Compass size={18}/> Treasure Hunt</button>
+          <button onClick={() => { setScore(0); setQuizIndex(0); setVisited(new Set()); setMessage('Adventure reset!'); }}><RotateCcw size={18}/> Reset</button>
+        </nav>
 
-      <div className="layout wide-map-layout">
-        <section className="map-card">
-          <div className="map-title"><MapPin /> Clickable India Map</div>
-          <VectorIndiaMap states={states} selected={selected} visited={visited} onPick={chooseState} />
-          <input className="search" placeholder="Search state, UT, capital, language..." value={query} onChange={(e) => setQuery(e.target.value)} />
-          <div className="state-grid compact">
-            {filteredStates.map((state) => (
-              <button key={state.name} className={`state-tile ${selected.name === state.name ? 'selected' : ''}`} onClick={() => chooseState(state)}>
-                <span className="emoji">{state.emoji}</span>
-                <span>{state.name}</span>
-                {visited.has(state.name) && <Star className="mini-star" size={14} />}
-              </button>
-            ))}
-          </div>
-        </section>
+        {mode === 'hunt' && (
+          <section className="hunt-card">
+            <h2>🪙 Treasure Hunt</h2>
+            <p>Find the state or UT whose capital is <strong>{treasure.capital}</strong> and language is <strong>{treasure.language}</strong>.</p>
+          </section>
+        )}
 
-        <aside className="info-card">
-          <div className="big-emoji">{selected.emoji}</div>
-          <h2>{selected.name}</h2>
-          <div className="fact-row"><strong>🏛 Capital</strong><span>{selected.capital}</span></div>
-          <div className="fact-row"><strong>🗣 Language</strong><span>{selected.language}</span></div>
-          <div className="fact-row"><strong>🧭 Zone</strong><span>{selected.zone}</span></div>
-          <p className="fun"><Sparkles size={18}/> {selected.fact}</p>
-          <button className="speak" onClick={() => speak(selected)}><Volume2 size={18}/> Read aloud</button>
-          <p className="message">{message}</p>
-          <div className="progress">Visited {visited.size} / {states.length} places</div>
-        </aside>
-      </div>
+        <div className="layout wide-map-layout">
+          <section className="map-card">
+            <div className="map-title"><MapPin /> Clickable India Map</div>
+            <VectorIndiaMap states={states} selected={selected} visited={visited} onPick={chooseState} />
+            <input className="search" placeholder="Search state, UT, capital, language..." value={query} onChange={(e) => setQuery(e.target.value)} />
+            <div className="state-grid compact">
+              {filteredStates.map((state) => (
+                <button key={state.name} className={`state-tile ${selected.name === state.name ? 'selected' : ''}`} onClick={() => chooseState(state)}>
+                  <span className="emoji">{state.emoji}</span>
+                  <span>{state.name}</span>
+                  {visited.has(state.name) && <Star className="mini-star" size={14} />}
+                </button>
+              ))}
+            </div>
+          </section>
 
-      {mode === 'quiz' && (
-        <section className="quiz-card">
-          <h2>Quiz Quest</h2>
-          <p>What is the capital of <strong>{question.answer.name}</strong>?</p>
-          <div className="quiz-options">
-            {question.options.map((option) => <button key={option} onClick={() => answerQuiz(option)}>{option}</button>)}
-          </div>
-        </section>
-      )}
+          <aside className="info-card">
+            <div className="big-emoji">{selected.emoji}</div>
+            <h2>{selected.name}</h2>
+            <div className="fact-row"><strong>🏛 Capital</strong><span>{selected.capital}</span></div>
+            <div className="fact-row"><strong>🗣 Language</strong><span>{selected.language}</span></div>
+            <div className="fact-row"><strong>🧭 Zone</strong><span>{selected.zone}</span></div>
+            <p className="fun"><Sparkles size={18}/> {selected.fact}</p>
+            <button className="speak" onClick={() => speak(selected)}><Volume2 size={18}/> Read aloud</button>
+            <p className="message">{message}</p>
+            <div className="progress">Visited {visited.size} / {states.length} places</div>
+          </aside>
+        </div>
+
+        {mode === 'quiz' && (
+          <section className="quiz-card">
+            <h2>Quiz Quest</h2>
+            <p>What is the capital of <strong>{question.answer.name}</strong>?</p>
+            <div className="quiz-options">
+              {question.options.map((option) => <button key={option} onClick={() => answerQuiz(option)}>{option}</button>)}
+            </div>
+          </section>
+        )}
+      </>}
+
+      {section === 'continents' && <div className="layout">
+        <LearningCards title="Continents Explorer" subtitle="Tap a continent to learn landmarks, animals, and fun facts." items={continents} selected={selectedContinent} onPick={setSelectedContinent} type="continent" />
+        <WorldInfo item={selectedContinent} type="continent" speak={speak} />
+      </div>}
+
+      {section === 'oceans' && <div className="layout">
+        <LearningCards title="Oceans Explorer" subtitle="Tap an ocean to learn where it is and what animals live there." items={oceans} selected={selectedOcean} onPick={setSelectedOcean} type="ocean" />
+        <WorldInfo item={selectedOcean} type="ocean" speak={speak} />
+      </div>}
     </main>
   );
 }
