@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { MapPin, Star, Trophy, Volume2, Sparkles, RotateCcw, Compass } from 'lucide-react';
+import VectorIndiaMap from './VectorIndiaMap';
 import './style.css';
 
 const states = [
@@ -40,19 +41,6 @@ function makeQuestion(index) {
   return { answer, options };
 }
 
-function ImageMap({ selected, visited, onPick }) {
-  return (
-    <div className="image-map-wrap">
-      <img src="/india-map.png" alt="Illustrated India states map" className="game-map-image" />
-      {states.map((state) => (
-        <button key={state.name} className={`hotspot ${selected.name === state.name ? 'active' : ''}`} style={{ left: `${state.x}%`, top: `${state.y}%` }} onClick={() => onPick(state)} aria-label={`Open ${state.name}`} title={state.name}>
-          <span>{visited.has(state.name) ? '★' : state.emoji}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
-
 export default function App() {
   const [selected, setSelected] = useState(states[13]);
   const [visited, setVisited] = useState(new Set(['Maharashtra']));
@@ -61,7 +49,7 @@ export default function App() {
   const [quizIndex, setQuizIndex] = useState(0);
   const [huntIndex, setHuntIndex] = useState(5);
   const [score, setScore] = useState(0);
-  const [message, setMessage] = useState('Tap a state on the picture map to begin!');
+  const [message, setMessage] = useState('Tap a colored state shape to begin!');
 
   const filteredStates = useMemo(() => states.filter((s) =>
     [s.name, s.capital, s.language, s.zone].join(' ').toLowerCase().includes(query.toLowerCase())
@@ -111,7 +99,7 @@ export default function App() {
         <div>
           <p className="eyebrow">For curious explorers age 7+</p>
           <h1>🇮🇳 India States Adventure</h1>
-          <p className="subtitle">Tap the picture map, learn capitals and languages, then win quiz stars.</p>
+          <p className="subtitle">Tap real clickable state shapes, learn capitals and languages, then win quiz stars.</p>
         </div>
         <div className="mascot" aria-hidden="true">🐘</div>
         <div className="score-card"><Trophy /> <strong>{score}</strong><span>quiz stars</span></div>
@@ -133,8 +121,8 @@ export default function App() {
 
       <div className="layout wide-map-layout">
         <section className="map-card">
-          <div className="map-title"><MapPin /> Clickable India Picture Map</div>
-          <ImageMap selected={selected} visited={visited} onPick={chooseState} />
+          <div className="map-title"><MapPin /> Clickable India Vector Map</div>
+          <VectorIndiaMap states={states} selected={selected} visited={visited} onPick={chooseState} />
           <input className="search" placeholder="Search state, capital, language..." value={query} onChange={(e) => setQuery(e.target.value)} />
           <div className="state-grid compact">
             {filteredStates.map((state) => (
