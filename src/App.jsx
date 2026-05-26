@@ -1,0 +1,1 @@
+export default function App(){return (<div style={{padding:20,fontFamily:'Arial'}}><h1>🌟 India States Adventure</h1><h2>Tap a state to learn capitals and languages!</h2><button>Maharashtra</button><div><h3>Mumbai</h3><p>Language: Marathi</p></div></div>) }
