@@ -77,6 +77,8 @@ function centroid(feature, project) {
 export default function VectorIndiaMap({ states, selected, visited, onPick }) {
   const [geoJson, setGeoJson] = useState(null);
   const [error, setError] = useState('');
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     fetch('/india-states.geojson')
@@ -97,39 +99,58 @@ export default function VectorIndiaMap({ states, selected, visited, onPick }) {
     return { project: makeProjector(bounds) };
   }, [features]);
 
+  const zoomIn = () => setZoom((z) => Math.min(4, Number((z + 0.25).toFixed(2))));
+  const zoomOut = () => setZoom((z) => Math.max(1, Number((z - 0.25).toFixed(2))));
+  const resetZoom = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
+  const nudge = (dx, dy) => setPan((p) => ({ x: p.x + dx, y: p.y + dy }));
+
   if (error) return <div className="vector-map-wrap"><p className="message">Map error: {error}</p></div>;
   if (!geoJson) return <div className="vector-map-wrap loading-map">Loading India map…</div>;
   if (!mapData) return <div className="vector-map-wrap"><p className="message">GeoJSON loaded, but no drawable state coordinates were found.</p></div>;
 
   return (
     <div className="vector-map-wrap">
+      <div className="map-controls" aria-label="Map zoom controls">
+        <button onClick={zoomOut} disabled={zoom <= 1}>−</button>
+        <span>{Math.round(zoom * 100)}%</span>
+        <button onClick={zoomIn} disabled={zoom >= 4}>+</button>
+        <button onClick={resetZoom}>Reset</button>
+        {zoom > 1 && <>
+          <button onClick={() => nudge(0, -45)}>↑</button>
+          <button onClick={() => nudge(-45, 0)}>←</button>
+          <button onClick={() => nudge(45, 0)}>→</button>
+          <button onClick={() => nudge(0, 45)}>↓</button>
+        </>}
+      </div>
       <svg className="vector-india-map" viewBox="0 0 900 980" role="img" aria-label="Clickable GeoJSON map of India states">
-        {features.map((feature, index) => {
-          const rawName = getStateName(feature.properties);
-          const state = stateByName[normalizeName(rawName)];
-          const path = geometryToPath(feature.geometry, mapData.project);
-          if (!path) return null;
-          const active = state && selected.name === state.name;
-          const visitedState = state && visited.has(state.name);
-          const [labelX, labelY] = centroid(feature, mapData.project);
-          return (
-            <g key={`${rawName || 'state'}-${index}`}>
-              <path
-                d={path}
-                className={`state-shape color-${index % 7} ${active ? 'active' : ''} ${visitedState ? 'visited' : ''} ${state ? '' : 'disabled'}`}
-                onClick={() => state && onPick(state)}
-                role={state ? 'button' : 'img'}
-                tabIndex={state ? 0 : -1}
-                onKeyDown={(e) => e.key === 'Enter' && state && onPick(state)}
-              >
-                <title>{state ? `${state.name}: ${state.capital}` : rawName}</title>
-              </path>
-              {state && <text x={labelX} y={labelY} className="state-map-label" onClick={() => onPick(state)}>{state.name.split(' ')[0]}</text>}
-            </g>
-          );
-        })}
+        <g transform={`translate(${pan.x} ${pan.y}) scale(${zoom})`}>
+          {features.map((feature, index) => {
+            const rawName = getStateName(feature.properties);
+            const state = stateByName[normalizeName(rawName)];
+            const path = geometryToPath(feature.geometry, mapData.project);
+            if (!path) return null;
+            const active = state && selected.name === state.name;
+            const visitedState = state && visited.has(state.name);
+            const [labelX, labelY] = centroid(feature, mapData.project);
+            return (
+              <g key={`${rawName || 'state'}-${index}`}>
+                <path
+                  d={path}
+                  className={`state-shape color-${index % 7} ${active ? 'active' : ''} ${visitedState ? 'visited' : ''} ${state ? '' : 'disabled'}`}
+                  onClick={() => state && onPick(state)}
+                  role={state ? 'button' : 'img'}
+                  tabIndex={state ? 0 : -1}
+                  onKeyDown={(e) => e.key === 'Enter' && state && onPick(state)}
+                >
+                  <title>{state ? `${state.name}: ${state.capital}` : rawName}</title>
+                </path>
+                {state && <text x={labelX} y={labelY} className="state-map-label" onClick={() => onPick(state)}>{state.name.split(' ')[0]}</text>}
+              </g>
+            );
+          })}
+        </g>
       </svg>
-      <p className="map-caption">Tap a real state boundary from india-states.geojson.</p>
+      <p className="map-caption">Use + / − to zoom. Tap a state boundary to learn its capital and language.</p>
     </div>
   );
 }
