@@ -141,13 +141,7 @@ export default function VectorIndiaMap({ states, selected, visited, onPick }) {
       .catch((err) => setError(err.message));
   }, []);
 
-  const stateByName = useMemo(() => {
-    const entries = states.flatMap((state) => {
-      const base = normalizeName(state.name);
-      return [[base, state]];
-    });
-    return Object.fromEntries(entries);
-  }, [states]);
+  const stateByName = useMemo(() => Object.fromEntries(states.map((state) => [normalizeName(state.name), state])), [states]);
   const features = useMemo(() => Array.isArray(geoJson?.features) ? geoJson.features : [], [geoJson]);
   const mapData = useMemo(() => {
     if (!features.length) return null;
@@ -165,6 +159,20 @@ export default function VectorIndiaMap({ states, selected, visited, onPick }) {
   if (!geoJson) return <div className="vector-map-wrap loading-map">Loading India map…</div>;
   if (!mapData) return <div className="vector-map-wrap"><p className="message">GeoJSON loaded, but no drawable state coordinates were found.</p></div>;
 
+  const rendered = features.map((feature, index) => {
+    const rawName = getStateName(feature.properties);
+    const normalized = normalizeName(rawName);
+    const state = stateByName[aliases[normalized] || normalized];
+    const path = geometryToPath(feature.geometry, mapData.project);
+    if (!path) return null;
+    const active = state && selected.name === state.name;
+    const visitedState = state && visited.has(state.name);
+    const [labelX, labelY] = centroid(feature, mapData.project);
+    const label = state ? displayLabel(state.name) : rawName;
+    const dynamic = state ? labelStyle(feature, state, mapData.project, zoom) : { fontSize: 9, hide: true };
+    return { feature, index, rawName, state, path, active, visitedState, labelX, labelY, label, dynamic };
+  }).filter(Boolean);
+
   return (
     <div className="vector-map-wrap">
       <div className="map-controls" aria-label="Map zoom controls">
@@ -181,36 +189,38 @@ export default function VectorIndiaMap({ states, selected, visited, onPick }) {
       </div>
       <svg className="vector-india-map" viewBox="0 0 900 980" role="img" aria-label="Clickable GeoJSON map of India states">
         <g transform={`translate(${pan.x} ${pan.y}) scale(${zoom})`}>
-          {features.map((feature, index) => {
-            const rawName = getStateName(feature.properties);
-            const normalized = normalizeName(rawName);
-            const state = stateByName[aliases[normalized] || normalized];
-            const path = geometryToPath(feature.geometry, mapData.project);
-            if (!path) return null;
-            const active = state && selected.name === state.name;
-            const visitedState = state && visited.has(state.name);
-            const [labelX, labelY] = centroid(feature, mapData.project);
-            const label = state ? displayLabel(state.name) : rawName;
-            const dynamic = state ? labelStyle(feature, state, mapData.project, zoom) : { fontSize: 9, hide: true };
-            return (
-              <g key={`${rawName || 'state'}-${index}`}>
-                <path
-                  d={path}
-                  className={`state-shape color-${index % 7} ${active ? 'active' : ''} ${visitedState ? 'visited' : ''} ${state ? '' : 'disabled'}`}
-                  onClick={() => state && onPick(state)}
-                  role={state ? 'button' : 'img'}
-                  tabIndex={state ? 0 : -1}
-                  onKeyDown={(e) => e.key === 'Enter' && state && onPick(state)}
-                >
-                  <title>{state ? `${state.name}: ${state.capital}` : rawName}</title>
-                </path>
-                {state && !dynamic.hide && <text x={labelX} y={labelY} fontSize={dynamic.fontSize} className="state-map-label" onClick={() => onPick(state)}>{label}</text>}
-              </g>
-            );
-          })}
+          <g className="state-layer">
+            {rendered.map((item) => (
+              <path
+                key={`shape-${item.rawName || item.index}`}
+                d={item.path}
+                className={`state-shape color-${item.index % 7} ${item.active ? 'active' : ''} ${item.visitedState ? 'visited' : ''} ${item.state ? '' : 'disabled'}`}
+                onClick={() => item.state && onPick(item.state)}
+                role={item.state ? 'button' : 'img'}
+                tabIndex={item.state ? 0 : -1}
+                onKeyDown={(e) => e.key === 'Enter' && item.state && onPick(item.state)}
+              >
+                <title>{item.state ? `${item.state.name}: ${item.state.capital}` : item.rawName}</title>
+              </path>
+            ))}
+          </g>
+          <g className="label-layer">
+            {rendered.map((item) => item.state && !item.dynamic.hide ? (
+              <text
+                key={`label-${item.state.name}-${item.index}`}
+                x={item.labelX}
+                y={item.labelY}
+                fontSize={item.dynamic.fontSize}
+                className="state-map-label"
+                onClick={() => onPick(item.state)}
+              >
+                {item.label}
+              </text>
+            ) : null)}
+          </g>
         </g>
       </svg>
-      <p className="map-caption">Use + / − to zoom. Labels resize automatically so small states are easier to read.</p>
+      <p className="map-caption">Use + / − to zoom. Labels are drawn above the map so they stay readable.</p>
     </div>
   );
 }
