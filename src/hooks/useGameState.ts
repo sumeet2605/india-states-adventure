@@ -76,17 +76,17 @@ export function useGameState() {
     setMissions((old) => ensureTodayMissions(old).map((item) => item.id === id ? { ...item, claimed: true } : item));
     grant(mission.rewardXp, mission.rewardCoins, 'Mission Complete!', `${mission.title} reward unlocked.`);
   };
-  const markVisited = (name: string) => setVisitedNames((old) => {
-    if (old.includes(name)) return old;
+  const collectStateCard = (name: string) => {
+    if (visited.has(name)) return;
+    setVisitedNames((old) => old.includes(name) ? old : [...old, name]);
     advanceDailyMission('visit');
     grant(5, 5, 'State Card Collected!', `${name} added to your collection.`);
-    return [...old, name];
-  });
+  };
   const increaseMastery = (name: string, amount = 1) => setMastery((old) => ({ ...old, [name]: Math.min(3, (old[name] ?? 0) + amount) }));
   const startRecallPractice = () => { setMode('quiz'); setSection('india'); setMessage(`Recall mission: what is the capital of ${question.answer.name}? Guess before tapping.`); };
   const startMission = () => { setMode('hunt'); setSection('india'); setMessage(`Mission started: find the place with capital ${treasure.capital}.`); };
   const chooseState = (state: IndiaPlace) => {
-    setSelectedName(state.name); markVisited(state.name); increaseMastery(state.name, 1);
+    setSelectedName(state.name); collectStateCard(state.name); increaseMastery(state.name, 1);
     if (mode === 'hunt' && state.name === treasure.name) {
       grant(25, 20, 'Treasure Mission Complete!', `${state.name} mission cleared.`);
       advanceDailyMission('mission');
@@ -112,7 +112,7 @@ export function useGameState() {
     if (correct) advanceDailyMission('quiz');
     setStreak((current) => correct ? current + 1 : 0);
     if (correct) increaseMastery(question.answer.name, 2);
-    setSelectedName(question.answer.name); markVisited(question.answer.name); setQuizIndex((current) => current + 1);
+    setSelectedName(question.answer.name); collectStateCard(question.answer.name); setQuizIndex((current) => current + 1);
   };
   const answerWorld = (option: string) => {
     const correct = quizValue(worldQuestion);
