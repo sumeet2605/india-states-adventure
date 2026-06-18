@@ -55,6 +55,21 @@ export function useGameState() {
     addStars(0, note);
   };
 
+  const visitContinent = (item: WorldPlace) => {
+    setSelectedContinent(item);
+    addStars(2, `Passport stamp for ${item.name}! ✨`);
+  };
+
+  const visitOcean = (item: WorldPlace) => {
+    setSelectedOcean(item);
+    addStars(2, `Ocean stamp for ${item.name}! 🌊`);
+  };
+
+  const visitCountry = (item: WorldPlace) => {
+    setSelectedCountry(item);
+    addStars(2, `Country stamp for ${item.name}! ✈️`);
+  };
+
   const speak = (item: IndiaPlace | WorldPlace) => {
     if (!soundOn || !window.speechSynthesis) return;
     const text = item.capital ? `${item.name}. Capital ${item.capital}. Language ${item.language}.` : `${item.name}. ${item.fact}`;
@@ -77,5 +92,5 @@ export function useGameState() {
 
   const resetGame = () => { setScore(0); setQuizIndex(0); setWorldQuizIndex(0); setVisited(new Set()); setMessage('Adventure reset!'); };
 
-  return { states, continents, oceans, countries, section, setSection, selected, selectedContinent, selectedOcean, selectedCountry, visited, mode, setMode, query, setQuery, score, message, soundOn, setSoundOn, question, worldQuestion, worldOptions, treasure, level, progress, addStars, chooseState, speak, answerQuiz, answerWorld, resetGame, setSelectedContinent, setSelectedOcean, setSelectedCountry };
+  return { states, continents, oceans, countries, section, setSection, selected, selectedContinent, selectedOcean, selectedCountry, visited, mode, setMode, query, setQuery, score, message, soundOn, setSoundOn, question, worldQuestion, worldOptions, treasure, level, progress, addStars, chooseState, visitContinent, visitOcean, visitCountry, speak, answerQuiz, answerWorld, resetGame };
 }
