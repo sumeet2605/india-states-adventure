@@ -18,6 +18,7 @@ import { useGameState } from './hooks/useGameState';
 import type { ScreenConfig } from './types';
 import './style.css';
 import './responsive.css';
+import './sprint-a.css';
 
 const screens: ScreenConfig[] = [
   { id: 'home', label: 'Home', icon: Home, desc: 'Choose your adventure' },
