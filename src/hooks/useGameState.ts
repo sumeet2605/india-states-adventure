@@ -31,6 +31,8 @@ export function useGameState() {
   const [oceanName, setOceanName] = useLocalStorage('geoquest.selectedOcean', DEFAULT_OCEAN);
   const [countryName, setCountryName] = useLocalStorage('geoquest.selectedCountry', DEFAULT_COUNTRY);
   const [visitedNames, setVisitedNames] = useLocalStorage<string[]>('geoquest.visited', [DEFAULT_STATE]);
+  const [mastery, setMastery] = useLocalStorage<Record<string, number>>('geoquest.mastery', { [DEFAULT_STATE]: 1 });
+  const [streak, setStreak] = useLocalStorage<number>('geoquest.streak', 0);
   const [mode, setMode] = useLocalStorage('geoquest.mode', 'explore');
   const [query, setQuery] = useState('');
   const [quizIndex, setQuizIndex] = useState(0);
@@ -55,10 +57,19 @@ export function useGameState() {
 
   const addStars = (amount: number, note?: string) => { setScore((current) => current + amount); setMessage(note ?? `You earned ${amount} stars! ⭐`); };
   const markVisited = (name: string) => setVisitedNames((old) => Array.from(new Set([...old, name])));
+  const increaseMastery = (name: string, amount = 1) => setMastery((old) => ({ ...old, [name]: Math.min(3, (old[name] ?? 0) + amount) }));
+  const startRecallPractice = () => { setMode('quiz'); setSection('india'); setMessage(`Recall mission: what is the capital of ${question.answer.name}? Guess before tapping.`); };
+  const startMission = () => { setMode('hunt'); setSection('india'); setMessage(`Mission started: find the place with capital ${treasure.capital}.`); };
   const chooseState = (state: IndiaPlace) => {
-    setSelectedName(state.name); markVisited(state.name);
-    if (mode === 'hunt' && state.name === treasure.name) { addStars(15, 'Treasure found! +15 stars! 🪙'); setHuntIndex((current) => current + 7); return; }
-    addStars(0, mode === 'hunt' ? `Almost! Look for ${treasure.capital}.` : `Great! ${state.name}'s capital is ${state.capital}.`);
+    setSelectedName(state.name); markVisited(state.name); increaseMastery(state.name, 1);
+    if (mode === 'hunt' && state.name === treasure.name) {
+      addStars(15, 'Treasure found! +15 stars! 🪙');
+      increaseMastery(state.name, 1);
+      setStreak((current) => current + 1);
+      setHuntIndex((current) => current + 7);
+      return;
+    }
+    addStars(0, mode === 'hunt' ? `Almost! Look for ${treasure.capital}.` : `Great! ${state.name}'s capital is ${state.capital}. Now try recalling it without looking.`);
   };
   const visitContinent = (item: WorldPlace) => { setContinentName(item.name); addStars(2, `Passport stamp for ${item.name}! ✨`); };
   const visitOcean = (item: WorldPlace) => { setOceanName(item.name); addStars(2, `Ocean stamp for ${item.name}! 🌊`); };
@@ -69,7 +80,10 @@ export function useGameState() {
     window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
   };
   const answerQuiz = (option: string) => {
-    option === question.answer.capital ? addStars(10, 'Correct! +10 stars ⭐') : setMessage(`Good try! The answer is ${question.answer.capital}.`);
+    const correct = option === question.answer.capital;
+    correct ? addStars(10, 'Correct recall! +10 stars ⭐') : setMessage(`Good try! The answer is ${question.answer.capital}. Say it aloud once.`);
+    setStreak((current) => correct ? current + 1 : 0);
+    if (correct) increaseMastery(question.answer.name, 2);
     setSelectedName(question.answer.name); markVisited(question.answer.name); setQuizIndex((current) => current + 1);
   };
   const answerWorld = (option: string) => {
@@ -80,8 +94,8 @@ export function useGameState() {
   const resetGame = () => {
     setScore(0); setQuizIndex(0); setWorldQuizIndex(0); setHuntIndex(5); setSelectedName(DEFAULT_STATE);
     setContinentName(DEFAULT_CONTINENT); setOceanName(DEFAULT_OCEAN); setCountryName(DEFAULT_COUNTRY);
-    setVisitedNames([DEFAULT_STATE]); setMode('explore'); setMessage('Adventure reset!');
+    setVisitedNames([DEFAULT_STATE]); setMastery({ [DEFAULT_STATE]: 1 }); setStreak(0); setMode('explore'); setMessage('Adventure reset!');
   };
 
-  return { states, continents, oceans, countries, section, setSection, selected, selectedContinent, selectedOcean, selectedCountry, visited, mode, setMode, query, setQuery, score, message, soundOn, setSoundOn, question, worldQuestion, worldOptions, treasure, level, progress, addStars, chooseState, visitContinent, visitOcean, visitCountry, speak, answerQuiz, answerWorld, resetGame };
+  return { states, continents, oceans, countries, section, setSection, selected, selectedContinent, selectedOcean, selectedCountry, visited, mastery, streak, mode, setMode, query, setQuery, score, message, soundOn, setSoundOn, question, worldQuestion, worldOptions, treasure, level, progress, addStars, chooseState, visitContinent, visitOcean, visitCountry, speak, answerQuiz, answerWorld, startRecallPractice, startMission, resetGame };
 }
