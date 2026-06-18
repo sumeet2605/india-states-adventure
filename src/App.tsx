@@ -18,7 +18,7 @@ const screens: ScreenConfig[] = [
   { id: 'memory', label: 'Memory Match', icon: Brain, desc: 'Match pairs for stars' },
   { id: 'world', label: 'World Explorer', icon: Globe2, desc: 'Continents, oceans, countries' },
   { id: 'passport', label: 'Passport', icon: ShieldCheck, desc: 'Badges and progress' },
-  { id: 'settings', label: 'Settings, icon: Settings', desc: 'Reset and controls' } as unknown as ScreenConfig
+  { id: 'settings', label: 'Settings', icon: Settings, desc: 'Reset and controls' }
 ];
 
 function makeQuestion<T extends { name: string }>(index: number, list: T[]) {
