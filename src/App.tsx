@@ -14,6 +14,7 @@ import { useAchievement } from './hooks/useAchievement';
 import { useGameState } from './hooks/useGameState';
 import type { ScreenConfig } from './types';
 import './style.css';
+import './responsive.css';
 
 const screens: ScreenConfig[] = [
   { id: 'home', label: 'Home', icon: Home, desc: 'Choose your adventure' },
