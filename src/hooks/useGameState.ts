@@ -3,6 +3,7 @@ import { continents, countries, oceans } from '../data';
 import { makeOptions } from '../games';
 import { indiaPlaces as states } from '../data/india';
 import type { IndiaPlace, Question, QuizPlace, ScreenId, WorldPlace } from '../types';
+import { useLocalStorage } from './useLocalStorage';
 
 function quizValue(place: QuizPlace): string {
   return place.capital ?? place.landmark ?? place.size ?? place.name;
@@ -20,15 +21,16 @@ export function useGameState() {
   const [selectedContinent, setSelectedContinent] = useState<WorldPlace>(continents[0]);
   const [selectedOcean, setSelectedOcean] = useState<WorldPlace>(oceans[0]);
   const [selectedCountry, setSelectedCountry] = useState<WorldPlace>(countries[0]);
-  const [visited, setVisited] = useState(new Set<string>(['Maharashtra']));
+  const [visitedNames, setVisitedNames] = useLocalStorage<string[]>('geoquest.visited', ['Maharashtra']);
   const [mode, setMode] = useState('explore');
   const [query, setQuery] = useState('');
   const [quizIndex, setQuizIndex] = useState(0);
   const [huntIndex, setHuntIndex] = useState(5);
-  const [score, setScore] = useState(0);
+  const [score, setScore] = useLocalStorage<number>('geoquest.score', 0);
   const [message, setMessage] = useState('Tap a colored state or union territory shape to begin!');
   const [worldQuizIndex, setWorldQuizIndex] = useState(0);
-  const [soundOn, setSoundOn] = useState(true);
+  const [soundOn, setSoundOn] = useLocalStorage<boolean>('geoquest.soundOn', true);
+  const visited = useMemo(() => new Set(visitedNames), [visitedNames]);
 
   const question = useMemo(() => makeQuestion(quizIndex, states), [quizIndex]);
   const worldItems: WorldPlace[] = useMemo(() => [...continents, ...oceans, ...countries], []);
@@ -45,7 +47,7 @@ export function useGameState() {
 
   const chooseState = (state: IndiaPlace) => {
     setSelected(state);
-    setVisited((old) => new Set([...old, state.name]));
+    setVisitedNames((old) => Array.from(new Set([...old, state.name])));
     if (mode === 'hunt' && state.name === treasure.name) {
       addStars(15, 'Treasure found! +15 stars! 🪙');
       setHuntIndex((current) => current + 7);
@@ -80,7 +82,7 @@ export function useGameState() {
   const answerQuiz = (option: string) => {
     option === question.answer.capital ? addStars(10, 'Correct! +10 stars ⭐') : setMessage(`Good try! The answer is ${question.answer.capital}.`);
     setSelected(question.answer);
-    setVisited((old) => new Set([...old, question.answer.name]));
+    setVisitedNames((old) => Array.from(new Set([...old, question.answer.name])));
     setQuizIndex((current) => current + 1);
   };
 
@@ -90,7 +92,7 @@ export function useGameState() {
     setWorldQuizIndex((current) => current + 1);
   };
 
-  const resetGame = () => { setScore(0); setQuizIndex(0); setWorldQuizIndex(0); setVisited(new Set()); setMessage('Adventure reset!'); };
+  const resetGame = () => { setScore(0); setQuizIndex(0); setWorldQuizIndex(0); setVisitedNames([]); setMessage('Adventure reset!'); };
 
   return { states, continents, oceans, countries, section, setSection, selected, selectedContinent, selectedOcean, selectedCountry, visited, mode, setMode, query, setQuery, score, message, soundOn, setSoundOn, question, worldQuestion, worldOptions, treasure, level, progress, addStars, chooseState, visitContinent, visitOcean, visitCountry, speak, answerQuiz, answerWorld, resetGame };
 }
