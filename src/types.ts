@@ -34,7 +34,7 @@ export type QuizPlace = {
   size?: string;
 };
 
-export type ScreenId = 'home' | 'india' | 'quiz' | 'memory' | 'world' | 'passport' | 'settings';
+export type ScreenId = 'home' | 'india' | 'quiz' | 'memory' | 'world' | 'passport' | 'collection' | 'settings';
 
 export type ScreenConfig = {
   id: ScreenId;
@@ -46,4 +46,27 @@ export type ScreenConfig = {
 export type Question<T> = {
   answer: T;
   options: string[];
+};
+
+export type PlayerProfile = {
+  xp: number;
+  coins: number;
+};
+
+export type DailyMission = {
+  id: string;
+  title: string;
+  target: number;
+  progress: number;
+  rewardCoins: number;
+  rewardXp: number;
+  completed: boolean;
+  claimed: boolean;
+};
+
+export type RewardNotice = {
+  title: string;
+  detail: string;
+  coins?: number;
+  xp?: number;
 };
