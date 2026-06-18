@@ -1,4 +1,4 @@
-import { earnedBadges } from '../games';
+import { useRewards } from '../hooks/useRewards';
 
 type PassportProps = {
   score: number;
@@ -6,15 +6,16 @@ type PassportProps = {
 };
 
 export function Passport({ score, visitedCount }: PassportProps) {
-  const badges = earnedBadges(score);
+  const { badges, nextBadge, nextBadgeProgress, totalBadges } = useRewards(score);
 
   return (
     <section className="passport-card">
       <h2>🛂 Explorer Passport</h2>
-      <p>Visited {visitedCount} places. Stars: {score}</p>
+      <p>Visited {visitedCount} places. Stars: {score}. Badges: {badges.length}/{totalBadges}</p>
+      {nextBadge && <p className="section-helper">Next: {nextBadge.emoji} {nextBadge.name} — {nextBadgeProgress}%</p>}
       <div className="badge-row">
         {badges.length ? (
-          badges.map((badge) => <span key={badge.name} className="badge">{badge.emoji} {badge.name}</span>)
+          badges.map((badge) => <span key={badge.name} className="badge" title={badge.description}>{badge.emoji} {badge.name}</span>)
         ) : (
           <span className="badge locked">🔒 Earn 25 stars for first badge</span>
         )}
