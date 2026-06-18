@@ -27,6 +27,13 @@ export type WorldPlace = {
   touches?: string;
 };
 
+export type QuizPlace = {
+  name: string;
+  capital?: string;
+  landmark?: string;
+  size?: string;
+};
+
 export type ScreenId = 'home' | 'india' | 'quiz' | 'memory' | 'world' | 'passport' | 'settings';
 
 export type ScreenConfig = {
