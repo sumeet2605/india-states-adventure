@@ -2,6 +2,7 @@ import { MapPin, Trophy, ShieldCheck, Globe2, Brain, Home, Settings } from 'luci
 import { Passport } from './components/Passport';
 import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
+import { AchievementToast } from './components/rewards/AchievementToast';
 import { HomeScreen } from './screens/HomeScreen';
 import { IndiaScreen } from './screens/IndiaScreen';
 import { QuizScreen } from './screens/QuizScreen';
@@ -9,6 +10,7 @@ import { MemoryScreen } from './screens/MemoryScreen';
 import { WorldScreen } from './screens/WorldScreen';
 import { PassportScreen } from './screens/PassportScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
+import { useAchievement } from './hooks/useAchievement';
 import { useGameState } from './hooks/useGameState';
 import type { ScreenConfig } from './types';
 import './style.css';
@@ -25,8 +27,9 @@ const screens: ScreenConfig[] = [
 
 export default function App() {
   const game = useGameState();
+  const achievement = useAchievement(game.score);
 
-  return <main className="game-shell"><Sidebar screens={screens} active={game.section} onNavigate={game.setSection}/><section className="app game-stage"><Header score={game.score} level={game.level} progress={game.progress}/><Passport score={game.score} visitedCount={game.visited.size}/>
+  return <main className="game-shell"><Sidebar screens={screens} active={game.section} onNavigate={game.setSection}/><AchievementToast badge={achievement.activeBadge} onDismiss={achievement.dismissAchievement}/><section className="app game-stage"><Header score={game.score} level={game.level} progress={game.progress}/><Passport score={game.score} visitedCount={game.visited.size}/>
     {game.section === 'home' && <HomeScreen screens={screens} score={game.score} level={game.level} visitedCount={game.visited.size} totalPlaces={game.states.length} onNavigate={game.setSection}/>} 
     {game.section === 'india' && <IndiaScreen states={game.states} selected={game.selected} visited={game.visited} mode={game.mode} query={game.query} message={game.message} treasure={game.treasure} question={game.question} onMode={game.setMode} onQuery={game.setQuery} onPick={game.chooseState} onSpeak={game.speak} onAnswer={game.answerQuiz} onReset={game.resetGame}/>} 
     {game.section === 'quiz' && <QuizScreen indiaQuestion={game.question} worldQuestion={game.worldQuestion} worldOptions={game.worldOptions} onIndiaAnswer={game.answerQuiz} onWorldAnswer={game.answerWorld}/>} 
