@@ -13,7 +13,7 @@ import { MemoryScreen } from './screens/MemoryScreen';
 import { WorldScreen } from './screens/WorldScreen';
 import { PassportScreen } from './screens/PassportScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
-import type { IndiaPlace, ScreenConfig, ScreenId, WorldPlace } from './types';
+import type { IndiaPlace, Question, QuizPlace, ScreenConfig, ScreenId, WorldPlace } from './types';
 import './style.css';
 
 const screens: ScreenConfig[] = [
@@ -26,11 +26,14 @@ const screens: ScreenConfig[] = [
   { id: 'settings', label: 'Settings', icon: Settings, desc: 'Reset and controls' }
 ];
 
-function makeQuestion<T extends { name: string }>(index: number, list: T[]) {
+function quizValue(place: QuizPlace): string {
+  return place.capital ?? place.landmark ?? place.size ?? place.name;
+}
+
+function makeQuestion<T extends QuizPlace>(index: number, list: T[]): Question<T> {
   const answer = list[index % list.length];
-  const pool = list.filter((s) => s.name !== answer.name).sort(() => Math.random() - 0.5).slice(0, 3);
-  const get = (s: any) => s.capital || s.landmark || s.size;
-  return { answer, options: [...pool.map(get), get(answer)].sort(() => Math.random() - 0.5) };
+  const pool = list.filter((place) => place.name !== answer.name).sort(() => Math.random() - 0.5).slice(0, 3);
+  return { answer, options: [...pool.map(quizValue), quizValue(answer)].sort(() => Math.random() - 0.5) };
 }
 
 export default function App() {
@@ -51,14 +54,14 @@ export default function App() {
   const question = useMemo(() => makeQuestion(quizIndex, states), [quizIndex]);
   const worldItems: WorldPlace[] = [...continents, ...oceans, ...countries];
   const worldQuestion = worldItems[worldQuizIndex % worldItems.length];
-  const worldOptions = useMemo(() => makeOptions(worldItems, worldQuestion, (i: any) => i.landmark || i.capital || i.size), [worldQuizIndex]);
+  const worldOptions = useMemo(() => makeOptions(worldItems, worldQuestion, quizValue), [worldQuizIndex]);
   const level = Math.floor(score / 50) + 1;
 
   const addStars = (amount: number, note?: string) => { setScore((s) => s + amount); setMessage(note || `You earned ${amount} stars! ⭐`); };
   const chooseState = (state: IndiaPlace) => { setSelected(state); setVisited((old) => new Set([...old, state.name])); addStars(0, mode === 'hunt' && state.name !== states[huntIndex % states.length].name ? `Almost! Look for ${states[huntIndex % states.length].capital}.` : `Great! ${state.name}'s capital is ${state.capital}.`); if (mode === 'hunt' && state.name === states[huntIndex % states.length].name) { addStars(15, `Treasure found! +15 stars! 🪙`); setHuntIndex((i) => i + 7); } };
   const speak = (item: IndiaPlace | WorldPlace) => { if (!soundOn || !window.speechSynthesis) return; const text = 'capital' in item && item.capital ? `${item.name}. Capital ${item.capital}. Language ${item.language}.` : `${item.name}. ${item.fact}`; window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(text)); };
   const answerQuiz = (option: string) => { option === question.answer.capital ? addStars(10, 'Correct! +10 stars ⭐') : setMessage(`Good try! The answer is ${question.answer.capital}.`); setSelected(question.answer); setVisited((old) => new Set([...old, question.answer.name])); setQuizIndex((i) => i + 1); };
-  const answerWorld = (option: string) => { const correct = worldQuestion.landmark || worldQuestion.capital || worldQuestion.size; option === correct ? addStars(10, 'World quiz correct! +10 stars 🌎') : setMessage(`Good try! The answer is ${correct}.`); setWorldQuizIndex((i) => i + 1); };
+  const answerWorld = (option: string) => { const correct = quizValue(worldQuestion); option === correct ? addStars(10, 'World quiz correct! +10 stars 🌎') : setMessage(`Good try! The answer is ${correct}.`); setWorldQuizIndex((i) => i + 1); };
   const resetGame = () => { setScore(0); setQuizIndex(0); setWorldQuizIndex(0); setVisited(new Set()); setMessage('Adventure reset!'); };
 
   return <main className="game-shell"><Sidebar screens={screens} active={section} onNavigate={setSection}/><section className="app game-stage"><Header score={score} level={level} progress={(score % 50) * 2}/><Passport score={score} visitedCount={visited.size}/>
