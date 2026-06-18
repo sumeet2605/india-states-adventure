@@ -1,19 +1,22 @@
-import { Trophy } from 'lucide-react';
+import { Coins, Sparkles } from 'lucide-react';
 
 type Props = {
-  score: number;
   level: number;
   progress: number;
+  xp: number;
+  coins: number;
+  rank: string;
 };
 
-export function Header({ score, level, progress }: Props) {
+export function Header({ level, progress, xp, coins, rank }: Props) {
   return (
     <header className="topbar">
       <div><p className="eyebrow">For curious explorers age 7+</p><h1>Geography Adventure</h1></div>
       <div className="player-panel">
         <div className="avatar">🐘</div>
-        <div><strong>Explorer</strong><span>Level {level}</span><div className="level-track"><i style={{ width: `${progress}%` }} /></div></div>
-        <div className="score-pill"><Trophy size={20}/> {score}</div>
+        <div><strong>{rank}</strong><span>Level {level} · {xp} XP</span><div className="level-track"><i style={{ width: `${progress}%` }} /></div></div>
+        <div className="score-pill"><Coins size={20}/> {coins}</div>
+        <div className="score-pill"><Sparkles size={20}/> XP</div>
       </div>
     </header>
   );
