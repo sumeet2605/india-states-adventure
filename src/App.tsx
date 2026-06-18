@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { MapPin, Star, Trophy, Volume2, Sparkles, RotateCcw, Compass, Play, ShieldCheck, Globe2, Brain, Home, Settings } from 'lucide-react';
+import { MapPin, Star, Trophy, Volume2, Sparkles, RotateCcw, Compass, Play, ShieldCheck, Globe2, Brain, Home, Settings, Zap } from 'lucide-react';
 import VectorIndiaMap from './VectorIndiaMap';
 import { continents, oceans, countries } from './data';
 import { makeOptions } from './games';
@@ -18,7 +18,7 @@ const screens: ScreenConfig[] = [
   { id: 'memory', label: 'Memory Match', icon: Brain, desc: 'Match pairs for stars' },
   { id: 'world', label: 'World Explorer', icon: Globe2, desc: 'Continents, oceans, countries' },
   { id: 'passport', label: 'Passport', icon: ShieldCheck, desc: 'Badges and progress' },
-  { id: 'settings', label: 'Settings', icon: Settings, desc: 'Reset and controls' }
+  { id: 'settings', label: 'Settings, icon: Settings', desc: 'Reset and controls' } as unknown as ScreenConfig
 ];
 
 function makeQuestion<T extends { name: string }>(index: number, list: T[]) {
@@ -57,6 +57,7 @@ export default function App() {
   const currencyOptions = useMemo(() => makeOptions(countries, countryQuestion, (i: any) => i.currency), [countryQuizIndex]);
   const level = Math.floor(score / 50) + 1;
   const nextLevelProgress = score % 50;
+  const completedPercent = Math.round((visited.size / states.length) * 100);
 
   function addStars(amount: number, note?: string) { setScore((s) => s + amount); setMessage(note || `You earned ${amount} stars! ⭐`); }
   function chooseState(state: IndiaPlace) { setSelected(state); setVisited((old) => new Set([...old, state.name])); if (mode === 'hunt') { if (state.name === treasure.name) { addStars(15, `Treasure found! ${state.name} has capital ${state.capital}. +15 stars! 🪙`); setHuntIndex((i) => i + 7); } else setMessage(`Almost! Look for the state or UT with capital ${treasure.capital}.`); } else setMessage(`Great! ${state.name}'s capital is ${state.capital}.`); }
@@ -66,7 +67,7 @@ export default function App() {
   function answerCountry(option: string, field: 'capital' | 'currency') { const correct = countryQuestion[field]; if (option === correct) addStars(10, `Correct! ${countryQuestion.name} uses ${correct}. +10 stars ✈️`); else setMessage(`Good try! ${countryQuestion.name}: ${correct}.`); setSelectedCountry(countryQuestion); setCountryQuizIndex((i) => i + 1); }
   function resetGame() { setScore(0); setQuizIndex(0); setWorldQuizIndex(0); setCountryQuizIndex(0); setVisited(new Set()); setMessage('Adventure reset!'); }
 
-  const HomeScreen = <section className="game-home"><div className="home-copy"><p className="eyebrow">Professional learning game</p><h2>Choose your mission, explorer!</h2><p>Play map quests, quizzes, memory challenges, and collect passport badges while learning geography.</p><div className="hero-actions"><button className="primary-play" onClick={() => setSection('india')}><Play size={22}/> Start India Adventure</button><button className="secondary-play" onClick={() => setSection('quiz')}><Trophy size={20}/> Quick Quiz</button></div></div><div className="mission-grid">{screens.filter((s) => s.id !== 'home').map(({ id, label, desc, icon: Icon }) => <button key={id} className="mission-card" onClick={() => setSection(id)}><Icon size={32}/><strong>{label}</strong><span>{desc}</span></button>)}</div></section>;
+  const HomeScreen = <section className="home-adventure"><div className="home-hero-card"><div className="floating-stars">⭐ ✨ 🏆</div><p className="eyebrow">GeoQuest Junior</p><h2>Ready for today's geography mission?</h2><p>Explore India, collect state stamps, solve capital quizzes, and unlock explorer badges.</p><div className="hero-actions"><button className="primary-play" onClick={() => setSection('india')}><Play size={22}/> Start Adventure</button><button className="secondary-play" onClick={() => setSection('quiz')}><Zap size={20}/> Daily Challenge</button></div><div className="quest-stats"><span>🧭 {visited.size}/{states.length} places</span><span>⭐ {score} stars</span><span>🏅 Level {level}</span></div></div><div className="mascot-stage"><div className="mascot-bubble">Tap a state and I will tell you its capital!</div><div className="mascot-character">🐘</div><div className="progress-island"><strong>India Explorer Progress</strong><div className="big-progress"><i style={{ width: `${completedPercent}%` }} /></div><span>{completedPercent}% completed</span></div></div><div className="mission-grid pro">{screens.filter((s) => s.id !== 'home').map(({ id, label, desc, icon: Icon }) => <button key={id} className="mission-card" onClick={() => setSection(id)}><Icon size={34}/><strong>{label}</strong><span>{desc}</span></button>)}</div></section>;
 
   return <main className="game-shell"><aside className="side-nav"><div className="brand"><span>🌎</span><strong>GeoQuest</strong><small>Junior</small></div>{screens.map(({ id, label, icon: Icon }) => <button key={id} className={section === id ? 'active' : ''} onClick={() => setSection(id)}><Icon size={19}/><span>{label}</span></button>)}</aside><section className="app game-stage"><header className="topbar"><div><p className="eyebrow">For curious explorers age 7+</p><h1>Geography Adventure</h1></div><div className="player-panel"><div className="avatar">🐘</div><div><strong>Explorer</strong><span>Level {level}</span><div className="level-track"><i style={{ width: `${(nextLevelProgress / 50) * 100}%` }} /></div></div><div className="score-pill"><Trophy size={20}/> {score}</div></div></header><Passport score={score} visitedCount={visited.size} />
     {section === 'home' && HomeScreen}
