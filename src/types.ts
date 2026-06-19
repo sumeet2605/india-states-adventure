@@ -34,7 +34,7 @@ export type QuizPlace = {
   size?: string;
 };
 
-export type ScreenId = 'home' | 'india' | 'quiz' | 'memory' | 'world' | 'passport' | 'collection' | 'settings';
+export type ScreenId = 'home' | 'india' | 'quiz' | 'memory' | 'world' | 'passport' | 'collection' | 'backpack' | 'settings';
 
 export type ScreenConfig = {
   id: ScreenId;
@@ -62,6 +62,35 @@ export type DailyMission = {
   rewardXp: number;
   completed: boolean;
   claimed: boolean;
+};
+
+export type ChestRarity = 'common' | 'rare' | 'epic' | 'legendary';
+
+export type Chest = {
+  id: string;
+  rarity: ChestRarity;
+  opened: boolean;
+};
+
+export type Sticker = {
+  id: string;
+  name: string;
+  category: string;
+  rarity: ChestRarity;
+  emoji: string;
+  description: string;
+};
+
+export type Inventory = {
+  chests: Chest[];
+  stickerIds: string[];
+};
+
+export type ChestReward = {
+  chest: Chest;
+  sticker: Sticker;
+  duplicate: boolean;
+  coins: number;
 };
 
 export type RewardNotice = {
