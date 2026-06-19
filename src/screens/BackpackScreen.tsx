@@ -1,4 +1,4 @@
-import { Backpack, Gift, LockKeyhole } from 'lucide-react';
+import { Backpack, LockKeyhole } from 'lucide-react';
 import { chestEmoji, chestLabel } from '../features/chests/chests';
 import { stickerCategories } from '../features/stickers/stickers';
 import type { Chest, Sticker } from '../types';
