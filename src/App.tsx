@@ -1,9 +1,10 @@
-import { MapPin, Trophy, ShieldCheck, Globe2, Brain, Home, Settings, BookOpenCheck } from 'lucide-react';
+import { MapPin, Trophy, ShieldCheck, Globe2, Brain, Home, Settings, BookOpenCheck, Package } from 'lucide-react';
 import { Passport } from './components/Passport';
 import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { DailyMissions } from './components/missions/DailyMissions';
 import { AchievementToast } from './components/rewards/AchievementToast';
+import { PackResult } from './components/rewards/PackResult';
 import { RewardModal } from './components/rewards/RewardModal';
 import { HomeScreen } from './screens/HomeScreen';
 import { IndiaScreen } from './screens/IndiaScreen';
@@ -12,6 +13,7 @@ import { MemoryScreen } from './screens/MemoryScreen';
 import { WorldScreen } from './screens/WorldScreen';
 import { PassportScreen } from './screens/PassportScreen';
 import { CollectionScreen } from './screens/CollectionScreen';
+import { BackpackScreen } from './screens/BackpackScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { useAchievement } from './hooks/useAchievement';
 import { useGameState } from './hooks/useGameState';
@@ -28,6 +30,7 @@ const screens: ScreenConfig[] = [
   { id: 'world', label: 'World Explorer', icon: Globe2, desc: 'Continents, oceans, countries' },
   { id: 'passport', label: 'Passport', icon: ShieldCheck, desc: 'Badges and progress' },
   { id: 'collection', label: 'Collection', icon: BookOpenCheck, desc: 'State cards and mastery' },
+  { id: 'backpack', label: 'Backpack', icon: Package, desc: 'Chests and stickers' },
   { id: 'settings', label: 'Settings', icon: Settings, desc: 'Reset and controls' }
 ];
 
@@ -35,7 +38,7 @@ export default function App() {
   const game = useGameState();
   const achievement = useAchievement(game.score);
 
-  return <main className="game-shell"><Sidebar screens={screens} active={game.section} onNavigate={game.setSection}/><AchievementToast badge={achievement.activeBadge} onDismiss={achievement.dismissAchievement}/><RewardModal reward={game.reward} onDismiss={() => game.setReward(null)}/><section className="app game-stage"><Header level={game.level} progress={game.progress} xp={game.profile.xp} coins={game.profile.coins} rank={game.rank}/><Passport score={game.profile.xp} visitedCount={game.visited.size}/><DailyMissions missions={game.missions} onClaim={game.claimMission}/>
+  return <main className="game-shell"><Sidebar screens={screens} active={game.section} onNavigate={game.setSection}/><AchievementToast badge={achievement.activeBadge} onDismiss={achievement.dismissAchievement}/><RewardModal reward={game.reward} onDismiss={() => game.setReward(null)}/><PackResult result={game.lastChestReward} onClose={() => game.setLastChestReward(null)}/><section className="app game-stage"><Header level={game.level} progress={game.progress} xp={game.profile.xp} coins={game.profile.coins} rank={game.rank}/><Passport score={game.profile.xp} visitedCount={game.visited.size}/><DailyMissions missions={game.missions} onClaim={game.claimMission}/>
     {game.section === 'home' && <HomeScreen screens={screens} score={game.profile.xp} level={game.level} visitedCount={game.visited.size} totalPlaces={game.states.length} onNavigate={game.setSection}/>} 
     {game.section === 'india' && <IndiaScreen states={game.states} selected={game.selected} visited={game.visited} mastery={game.mastery} streak={game.streak} score={game.profile.xp} mode={game.mode} query={game.query} message={game.message} treasure={game.treasure} question={game.question} onMode={game.setMode} onQuery={game.setQuery} onPick={game.chooseState} onSpeak={game.speak} onAnswer={game.answerQuiz} onStartQuiz={game.startRecallPractice} onStartHunt={game.startMission} onReset={game.resetGame}/>} 
     {game.section === 'quiz' && <QuizScreen indiaQuestion={game.question} worldQuestion={game.worldQuestion} worldOptions={game.worldOptions} onIndiaAnswer={game.answerQuiz} onWorldAnswer={game.answerWorld}/>} 
@@ -43,6 +46,7 @@ export default function App() {
     {game.section === 'world' && <WorldScreen mode={game.mode} continents={game.continents} oceans={game.oceans} countries={game.countries} selectedContinent={game.selectedContinent} selectedOcean={game.selectedOcean} selectedCountry={game.selectedCountry} onMode={game.setMode} onContinent={game.visitContinent} onOcean={game.visitOcean} onCountry={game.visitCountry} speak={game.speak}/>} 
     {game.section === 'passport' && <PassportScreen score={game.profile.xp} visitedCount={game.visited.size}/>} 
     {game.section === 'collection' && <CollectionScreen states={game.states} visited={game.visited} mastery={game.mastery} collectedCards={game.collectedCards} masteredCards={game.masteredCards} onPick={game.chooseState}/>} 
+    {game.section === 'backpack' && <BackpackScreen chests={game.inventory.chests} ownedStickers={game.ownedStickers} allStickers={game.allStickers} onOpenChest={game.openInventoryChest}/>} 
     {game.section === 'settings' && <SettingsScreen soundOn={game.soundOn} onToggleSound={() => game.setSoundOn((value) => !value)} onReset={game.resetGame}/>} 
   </section></main>;
 }
