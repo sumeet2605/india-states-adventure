@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react';
 import { continents, countries, oceans } from '../data';
 import { makeOptions } from '../games';
+import { createChest, openChest } from '../features/chests/chests';
+import { stickers } from '../features/stickers/stickers';
 import { advanceMission, ensureTodayMissions, getExplorerRank, getLevelFromXp, getLevelProgress } from '../growth';
 import { indiaPlaces as states } from '../data/india';
-import type { DailyMission, IndiaPlace, PlayerProfile, Question, QuizPlace, RewardNotice, ScreenId, WorldPlace } from '../types';
+import type { ChestReward, DailyMission, IndiaPlace, Inventory, PlayerProfile, Question, QuizPlace, RewardNotice, ScreenId, WorldPlace } from '../types';
 import { useLocalStorage } from './useLocalStorage';
 
 const DEFAULT_STATE = 'Maharashtra';
@@ -35,6 +37,8 @@ export function useGameState() {
   const [mastery, setMastery] = useLocalStorage<Record<string, number>>('geoquest.mastery', { [DEFAULT_STATE]: 1 });
   const [profile, setProfile] = useLocalStorage<PlayerProfile>('geoquest.profile', { xp: 0, coins: 0 });
   const [missions, setMissions] = useLocalStorage<DailyMission[]>('geoquest.dailyMissions', []);
+  const [inventory, setInventory] = useLocalStorage<Inventory>('geoquest.inventory', { chests: [], stickerIds: [] });
+  const [lastChestReward, setLastChestReward] = useState<ChestReward | null>(null);
   const [streak, setStreak] = useLocalStorage<number>('geoquest.streak', 0);
   const [mode, setMode] = useLocalStorage('geoquest.mode', 'explore');
   const [query, setQuery] = useState('');
@@ -62,11 +66,29 @@ export function useGameState() {
   const rank = getExplorerRank(level);
   const collectedCards = visitedNames.length;
   const masteredCards = Object.values(mastery).filter((value) => value >= 3).length;
+  const ownedStickers = useMemo(() => stickers.filter((sticker) => inventory.stickerIds.includes(sticker.id)), [inventory.stickerIds]);
+  const unopenedChests = inventory.chests.filter((chest) => !chest.opened);
 
   const grant = (xp: number, coins: number, title: string, detail: string) => {
     setProfile((current) => ({ xp: current.xp + xp, coins: current.coins + coins }));
     setScore((current) => current + xp);
     setReward({ title, detail, xp, coins });
+  };
+  const awardChest = (rarity?: 'common' | 'rare' | 'epic' | 'legendary') => {
+    const chest = createChest(rarity);
+    setInventory((current) => ({ ...current, chests: [...current.chests, chest] }));
+    setReward({ title: 'Chest Earned!', detail: 'Open it in your Backpack to reveal a sticker.', coins: 0, xp: 0 });
+  };
+  const openInventoryChest = (chestId: string) => {
+    const chest = inventory.chests.find((item) => item.id === chestId && !item.opened);
+    if (!chest) return;
+    const result = openChest(chest, inventory.stickerIds);
+    setLastChestReward(result);
+    setInventory((current) => ({
+      chests: current.chests.map((item) => item.id === chestId ? result.chest : item),
+      stickerIds: result.duplicate ? current.stickerIds : [...current.stickerIds, result.sticker.id]
+    }));
+    if (result.coins) setProfile((current) => ({ ...current, coins: current.coins + result.coins }));
   };
   const addStars = (amount: number, note?: string) => { setScore((current) => current + amount); setMessage(note ?? `You earned ${amount} stars! ⭐`); };
   const advanceDailyMission = (kind: 'visit' | 'quiz' | 'mission') => setMissions((old) => advanceMission(ensureTodayMissions(old), kind));
@@ -75,6 +97,7 @@ export function useGameState() {
     if (!mission || !mission.completed || mission.claimed) return;
     setMissions((old) => ensureTodayMissions(old).map((item) => item.id === id ? { ...item, claimed: true } : item));
     grant(mission.rewardXp, mission.rewardCoins, 'Mission Complete!', `${mission.title} reward unlocked.`);
+    awardChest(mission.rewardXp >= 35 ? 'rare' : 'common');
   };
   const collectStateCard = (name: string) => {
     if (visited.has(name)) return;
@@ -89,6 +112,7 @@ export function useGameState() {
     setSelectedName(state.name); collectStateCard(state.name); increaseMastery(state.name, 1);
     if (mode === 'hunt' && state.name === treasure.name) {
       grant(25, 20, 'Treasure Mission Complete!', `${state.name} mission cleared.`);
+      awardChest('rare');
       advanceDailyMission('mission');
       increaseMastery(state.name, 1);
       setStreak((current) => current + 1);
@@ -120,10 +144,10 @@ export function useGameState() {
     setWorldQuizIndex((current) => current + 1);
   };
   const resetGame = () => {
-    setScore(0); setProfile({ xp: 0, coins: 0 }); setMissions([]); setQuizIndex(0); setWorldQuizIndex(0); setHuntIndex(5); setSelectedName(DEFAULT_STATE);
+    setScore(0); setProfile({ xp: 0, coins: 0 }); setMissions([]); setInventory({ chests: [], stickerIds: [] }); setLastChestReward(null); setQuizIndex(0); setWorldQuizIndex(0); setHuntIndex(5); setSelectedName(DEFAULT_STATE);
     setContinentName(DEFAULT_CONTINENT); setOceanName(DEFAULT_OCEAN); setCountryName(DEFAULT_COUNTRY);
     setVisitedNames([DEFAULT_STATE]); setMastery({ [DEFAULT_STATE]: 1 }); setStreak(0); setMode('explore'); setMessage('Adventure reset!'); setReward(null);
   };
 
-  return { states, continents, oceans, countries, section, setSection, selected, selectedContinent, selectedOcean, selectedCountry, visited, mastery, streak, profile, missions: dailyMissions, rank, collectedCards, masteredCards, mode, setMode, query, setQuery, score, message, reward, setReward, soundOn, setSoundOn, question, worldQuestion, worldOptions, treasure, level, progress, addStars, chooseState, visitContinent, visitOcean, visitCountry, speak, answerQuiz, answerWorld, startRecallPractice, startMission, claimMission, resetGame };
+  return { states, continents, oceans, countries, section, setSection, selected, selectedContinent, selectedOcean, selectedCountry, visited, mastery, streak, profile, missions: dailyMissions, inventory, ownedStickers, unopenedChests, allStickers: stickers, lastChestReward, setLastChestReward, rank, collectedCards, masteredCards, mode, setMode, query, setQuery, score, message, reward, setReward, soundOn, setSoundOn, question, worldQuestion, worldOptions, treasure, level, progress, addStars, chooseState, visitContinent, visitOcean, visitCountry, speak, answerQuiz, answerWorld, startRecallPractice, startMission, claimMission, openInventoryChest, resetGame };
 }
