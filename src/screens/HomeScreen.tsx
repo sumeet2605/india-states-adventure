@@ -15,8 +15,8 @@ export function HomeScreen({ screens, score, level, visitedCount, totalPlaces, o
   return (
     <section className="home-adventure">
       <div className="home-hero-card">
-        <div className="floating-stars">⭐ ✨ 🏆</div><p className="eyebrow">GeoQuest Junior</p>
-        <h2>Ready for today's geography mission?</h2>
+        <div className="floating-stars">⭐ ✨ 🏆</div><p className="eyebrow">Geography Adventure</p>
+        <h2>Ready for today&apos;s geography mission?</h2>
         <p>Explore India, collect state stamps, solve capital quizzes, and unlock explorer badges.</p>
         <div className="hero-actions">
           <button className="primary-play" onClick={() => onNavigate('india')}><Play size={22}/> Start Adventure</button>
@@ -29,7 +29,7 @@ export function HomeScreen({ screens, score, level, visitedCount, totalPlaces, o
         <div className="progress-island"><strong>India Explorer Progress</strong><div className="big-progress"><i style={{ width: `${completedPercent}%` }} /></div><span>{completedPercent}% completed</span></div>
       </div>
       <div className="mission-grid pro">
-        {screens.filter((s) => s.id !== 'home').map(({ id, label, desc, icon: Icon }) => <button key={id} className="mission-card" onClick={() => onNavigate(id)}><Icon size={34}/><strong>{label}</strong><span>{desc}</span></button>)}
+        {screens.filter((s) => s.id !== 'home' && s.id !== 'space').map(({ id, label, desc, icon: Icon }) => <button key={id} className="mission-card" onClick={() => onNavigate(id)}><Icon size={34}/><strong>{label}</strong><span>{desc}</span></button>)}
       </div>
     </section>
   );
