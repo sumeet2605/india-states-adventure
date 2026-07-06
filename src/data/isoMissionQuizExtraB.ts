@@ -1,0 +1,16 @@
+import type { MissionQuizItem } from './isoMissionQuiz';
+
+export const isoMissionQuizExtraB: MissionQuizItem[] = [
+ { unitId:'u5-satellites', prompt:'What is a satellite?', options:['An object that moves around a larger body','A type of cloud','A rocket engine only','A star cluster'], correctIndex:0, note:'A satellite can be natural or artificial.' },
+ { unitId:'u5-satellites', prompt:'What does a weather satellite help monitor?', options:['Clouds and storms from space','Only mountains','Only Moon craters','Only classroom maps'], correctIndex:0, note:'Weather satellites repeatedly observe clouds and storms.' },
+ { unitId:'u5-satellites', prompt:'Why is one satellite signal not enough for navigation?', options:['Several signals narrow the position','One signal is always louder','Satellites cannot send time','GPS uses sound waves'], correctIndex:0, note:'A receiver compares timed signals from multiple satellites.' },
+ { unitId:'u6-rockets', prompt:'Why can rockets work in space?', options:['They carry fuel and oxidiser','They push against air only','They need clouds','They use wings to flap'], correctIndex:0, note:'Rockets do not need outside air to burn fuel.' },
+ { unitId:'u6-rockets', prompt:'What is reusable hardware?', options:['Designed to be used more than once','Used without inspection','Always free to launch','A fuel that never ends'], correctIndex:0, note:'Reuse needs recovery, inspection and maintenance.' },
+ { unitId:'u6-rockets', prompt:'Why do launch pads have restricted areas?', options:['To reduce risk and protect people','To make rockets slower','To hide stars','To block gravity'], correctIndex:0, note:'Launch sites need safety zones.' },
+ { unitId:'u7-isro', prompt:'What was Mangalyaan?', options:['India Mars Orbiter Mission','A Moon rover only','A weather balloon','A GPS receiver'], correctIndex:0, note:'Mangalyaan demonstrated India interplanetary capability at Mars.' },
+ { unitId:'u7-isro', prompt:'What does a soft landing mean?', options:['A controlled landing slow enough to avoid destructive impact','A crash at high speed','Falling without control','Only orbiting'], correctIndex:0, note:'Soft landing is a controlled surface landing.' },
+ { unitId:'u7-isro', prompt:'Why must Gaganyaan be described carefully?', options:['It was still under testing in the textbook status','It already landed people on Mars','It is only a sea mission','It has no safety systems'], correctIndex:0, note:'The textbook separates planned, testing and completed status.' },
+ { unitId:'u8-exploration', prompt:'What do astronauts need besides courage?', options:['Training, teamwork and mission support','Only running speed','No support from Earth','Only a spacesuit name'], correctIndex:0, note:'Astronauts work as part of large mission teams.' },
+ { unitId:'u8-exploration', prompt:'What can a rover do better than an orbiter?', options:['Touch and analyse rocks at one site','Map a whole planet at once','Become a star','Stop all dust storms'], correctIndex:0, note:'Rovers investigate local surface details.' },
+ { unitId:'u8-exploration', prompt:'Which mission began the space age?', options:['Sputnik 1','Apollo 11','Chandrayaan-3','Aditya-L1'], correctIndex:0, note:'Sputnik 1 was the first artificial satellite in 1957.' }
+];
